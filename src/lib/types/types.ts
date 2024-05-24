@@ -1,3 +1,5 @@
+import { Request } from "express";
+
 export interface User_T {
   _id: string;
   fullName: string;
@@ -36,4 +38,8 @@ export interface Post_T {
   comments: Comment_T[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IGetUserAuthInfoRequest extends Request {
+  user?: Record<string, any>;
 }
