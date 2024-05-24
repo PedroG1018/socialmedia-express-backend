@@ -4,7 +4,28 @@ import User from "../models/user.model";
 import bcrypt from "bcryptjs";
 import { User_T } from "../lib/types/types";
 
-export const checkAuth = async (req: Request, res: Response) => {};
+interface IGetUserAuthInfoRequest extends Request {
+  user?: Record<string, any>;
+}
+
+export const checkAuth = async (
+  req: IGetUserAuthInfoRequest,
+  res: Response
+) => {
+  try {
+    const user = await User.findById(req.user!._id).select("-password");
+    res.status(200).json(user);
+  } catch (error) {
+    let errorMessage = "Something went wrong";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.log("Error in checkAuth controller", errorMessage);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 export const register = async (req: Request, res: Response) => {
   try {
     const {
@@ -78,5 +99,55 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-export const login = async (req: Request, res: Response) => {};
-export const logout = async (req: Request, res: Response) => {};
+export const login = async (req: Request, res: Response) => {
+  try {
+    const { username, password }: { username: string; password: string } =
+      req.body;
+
+    const user = await User.findOne({ username });
+    const isPasswordCorrect: boolean = await bcrypt.compare(
+      password,
+      user?.password || ""
+    );
+
+    if (!user || !isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid username or password" });
+    }
+
+    generateTokenAndSetCookie(user._id, res);
+
+    res.status(201).json({
+      _id: user._id,
+      fullName: user.fullName,
+      username: user.username,
+      email: user.email,
+      followers: user.followers,
+      following: user.following,
+      profilePic: user.profilePic,
+      coverPic: user.coverPic,
+    });
+  } catch (error) {
+    let errorMessage = "Something went wrong";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.log("Error in register controller", errorMessage);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res.cookie("jwt", "", { maxAge: 0 });
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    let errorMessage = "Something went wrong";
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    console.log("Error in register controller", errorMessage);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
