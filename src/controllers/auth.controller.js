@@ -1,19 +1,10 @@
-import { Request, Response } from "express";
-import { generateTokenAndSetCookie } from "../lib/utils/generateToken";
-import User from "../models/user.model";
+import { generateTokenAndSetCookie } from "../lib/utils/generateToken.js";
+import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
-import { User_T } from "../lib/types/types";
 
-interface IGetUserAuthInfoRequest extends Request {
-  user?: Record<string, any>;
-}
-
-export const checkAuth = async (
-  req: IGetUserAuthInfoRequest,
-  res: Response
-) => {
+export const checkAuth = async (req, res) => {
   try {
-    const user = await User.findById(req.user!._id).select("-password");
+    const user = await User.findById(req.user._id).select("-password");
     res.status(200).json(user);
   } catch (error) {
     let errorMessage = "Something went wrong";
@@ -26,32 +17,22 @@ export const checkAuth = async (
   }
 };
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req, res) => {
   try {
-    const {
-      fullName,
-      username,
-      email,
-      password,
-    }: {
-      fullName: string;
-      username: string;
-      email: string;
-      password: string;
-    } = req.body;
+    const { fullName, username, email, password } = req.body;
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "Invalid email format" });
     }
 
-    const existingUser: User_T | null = await User.findOne({ username });
+    const existingUser = await User.findOne({ username });
 
     if (existingUser) {
       return res.status(400).json({ error: "Username is already taken" });
     }
 
-    const existingEmail: User_T | null = await User.findOne({ email });
+    const existingEmail = await User.findOne({ email });
 
     if (existingEmail) {
       return res.status(400).json({ error: "This email is already in use" });
@@ -64,7 +45,7 @@ export const register = async (req: Request, res: Response) => {
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword: string = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = new User({
       fullName,
@@ -99,13 +80,12 @@ export const register = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
-export const login = async (req: Request, res: Response) => {
+export const login = async (req, res) => {
   try {
-    const { username, password }: { username: string; password: string } =
-      req.body;
+    const { username, password } = req.body;
 
     const user = await User.findOne({ username });
-    const isPasswordCorrect: boolean = await bcrypt.compare(
+    const isPasswordCorrect = await bcrypt.compare(
       password,
       user?.password || ""
     );
@@ -137,7 +117,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
+export const logout = async (req, res) => {
   try {
     res.cookie("jwt", "", { maxAge: 0 });
     res.status(200).json({ message: "Logged out successfully" });
