@@ -1,12 +1,9 @@
-import { Request, Response } from "express";
-import User from "../models/user.model";
-import { IGetUserAuthInfoRequest, User_T } from "../lib/types/types";
+import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
-import Notification from "../models/notification.model";
-import { Query } from "mongoose";
+import Notification from "../models/notification.model.js";
 
-export const getUser = async (req: Request, res: Response) => {
+export const getUser = async (req, res) => {
   const { username } = req.params;
 
   try {
@@ -28,7 +25,7 @@ export const getUser = async (req: Request, res: Response) => {
   }
 };
 
-export const getAllUsers = async (req: Request, res: Response) => {
+export const getAllUsers = async (req, res) => {
   try {
     const { query } = req.params;
 
@@ -52,17 +49,14 @@ export const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
-export const followUnfollowUser = async (
-  req: IGetUserAuthInfoRequest,
-  res: Response
-) => {
+export const followUnfollowUser = async (req, res) => {
   try {
     const { id } = req.params;
 
     const userToModify = await User.findById(id);
-    const currentUser = await User.findById(req.user!._id);
+    const currentUser = await User.findById(req.user._id);
 
-    if (id === req.user!._id.toString()) {
+    if (id === req.user._id.toString()) {
       return res
         .status(400)
         .json({ error: "You can't follow/unfollow yourself" });
@@ -72,20 +66,20 @@ export const followUnfollowUser = async (
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isFollowing = currentUser.following.includes(id as any);
+    const isFollowing = currentUser.following.includes(id);
 
     if (isFollowing) {
-      await User.findByIdAndUpdate(id, { $pull: { followers: req.user!._id } });
-      await User.findByIdAndUpdate(req.user!._id, { $pull: { following: id } });
+      await User.findByIdAndUpdate(id, { $pull: { followers: req.user._id } });
+      await User.findByIdAndUpdate(req.user._id, { $pull: { following: id } });
       res.status(200).json({ message: "User unfollowed successfully" });
     } else {
-      await User.findByIdAndUpdate(id, { $push: { followers: req.user!._id } });
-      await User.findByIdAndUpdate(req.user!._id, { $push: { following: id } });
+      await User.findByIdAndUpdate(id, { $push: { followers: req.user._id } });
+      await User.findByIdAndUpdate(req.user._id, { $push: { following: id } });
 
       // send notification to the user
       const newNotification = new Notification({
         type: "follow",
-        from: req.user!._id,
+        from: req.user._id,
         to: userToModify._id,
       });
 
@@ -104,10 +98,7 @@ export const followUnfollowUser = async (
   }
 };
 
-export const updateUser = async (
-  req: IGetUserAuthInfoRequest,
-  res: Response
-) => {
+export const updateUser = async (req, res) => {
   try {
     const {
       fullName,
@@ -117,20 +108,11 @@ export const updateUser = async (
       newPassword,
       bio,
       links,
-    }: {
-      fullName: string;
-      email: string;
-      username: string;
-      currentPassword: string;
-      newPassword: string;
-      bio: string;
-      links: string[];
     } = req.body;
 
-    let { profilePic, coverPic }: { profilePic: string; coverPic: string } =
-      req.body;
+    let { profilePic, coverPic } = req.body;
 
-    const userId = req.user!._id;
+    const userId = req.user._id;
 
     let user = await User.findById(userId);
 
@@ -166,7 +148,7 @@ export const updateUser = async (
     if (profilePic) {
       if (user.profilePic) {
         await cloudinary.uploader.destroy(
-          user.profilePic.split("/").pop()!.split(".")[0]
+          user.profilePic.split("/").pop().split(".")[0]
         );
       }
 
@@ -176,7 +158,7 @@ export const updateUser = async (
     if (coverPic) {
       if (user.coverPic) {
         await cloudinary.uploader.destroy(
-          user.coverPic.split("/").pop()!.split(".")[0]
+          user.coverPic.split("/").pop().split(".")[0]
         );
       }
 

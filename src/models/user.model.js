@@ -61,6 +61,13 @@ const userSchema = new mongoose.Schema(
         default: [],
       },
     ],
+    likedComments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comment",
+        default: [],
+      },
+    ],
   },
   { timestamps: true }
 );

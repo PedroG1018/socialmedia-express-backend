@@ -6,14 +6,24 @@ const commentSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  parentPostId: [
+  parentPostId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+    required: true,
+  },
+
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Comment",
+    required: false,
+  },
+  childComments: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
-      required: true,
+      ref: "Comment",
+      default: [],
     },
   ],
-
   text: {
     type: String,
     required: true,
@@ -22,20 +32,6 @@ const commentSchema = new mongoose.Schema({
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: [],
-    },
-  ],
-  childComments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
-      default: [],
-    },
-  ],
-  parentComments: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Comment",
       default: [],
     },
   ],
