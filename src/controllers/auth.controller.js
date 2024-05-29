@@ -82,16 +82,16 @@ export const register = async (req, res) => {
 };
 export const login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     const isPasswordCorrect = await bcrypt.compare(
       password,
       user?.password || ""
     );
 
     if (!user || !isPasswordCorrect) {
-      return res.status(400).json({ error: "Invalid username or password" });
+      return res.status(400).json({ error: "Invalid email or password" });
     }
 
     generateTokenAndSetCookie(user._id, res);
@@ -112,7 +112,7 @@ export const login = async (req, res) => {
     if (error instanceof Error) {
       errorMessage = error.message;
     }
-    console.log("Error in register controller", errorMessage);
+    console.log("Error in login controller", errorMessage);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
